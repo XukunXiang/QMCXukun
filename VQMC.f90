@@ -44,9 +44,9 @@ subroutine init(n, s, b)
     end do
 end subroutine
 !----------------------------------------------------------------------------------------------------------------------
-subroutine random_walk(dr)
+subroutine random_walk(dr,j)
     real(8), intent(inout) :: dr
-
+    integer, intent(in) :: j
     integer :: i, accept
     real(8) :: testwalker(6) , u , psi_new, psi(num_walkers)
 
@@ -64,6 +64,13 @@ subroutine random_walk(dr)
         end if
     end do
     dr = dr * accept / (num_walkers * 0.5_8)
+
+    if (modulo(j,30000)==0) then
+      do i = 1, num_walkers
+	write (12,*) walkers(1,i),walkers(2,i),walkers(3,i)
+        write (12,*) walkers(4,i),walkers(5,i),walkers(6,i)
+      end do
+    end if
 end subroutine
 !-----------------------------------------------------------------------------------------------------------------------------
 !calculate up until the the Mu-th order moment of the energy 
@@ -86,7 +93,7 @@ function calc_psi(position)
     
     r1l = r1-R_L
     r1r = r1-R_R
-	r2l = r2-R_L
+    r2l = r2-R_L
     r2r = r2-R_R
     dr  = r1-r2
     
@@ -94,7 +101,6 @@ function calc_psi(position)
     calc_psi = (exp(-sqrt(sum(r1l**2))/a) + exp(-sqrt(sum(r1r**2))/a))  &      ! Orbit1
               * (exp(-sqrt(sum(r2l**2))/a) + exp(-sqrt(sum(r2r**2))/a)) &      ! Orbit2
               * exp(sqrt(sum(dr**2))/(2*(1+beta*sqrt(sum((dr**2))))))          !Jastrow
-    calc_psi = calc_psi**2
     return 
 end function
 
@@ -109,11 +115,10 @@ function calc_local_energy(position)
     r2 = position(4:6)
     d12 = sqrt(sum((r1-r2)**2))
     r12 = (r1-r2)/d12
-	
-    
-	r1l = r1-R_L
+	    
+    r1l = r1-R_L
     r1r = r1-R_R
-	r2l = r2-R_L
+    r2l = r2-R_L
     r2r = r2-R_R
     
     wf1l = exp(-sqrt(sum(r1l**2))/a)
@@ -124,10 +129,10 @@ function calc_local_energy(position)
     gamma = (1+beta*d12)
     
     calc_local_energy = ((1d0+(sum(r1l*r12))/(2*(gamma**2)))*wf1l/(a*(wf1l+wf1r))-1)/(sqrt(sum(r1l**2)))&
-                      +((1d0+(sum(r1r*r12))/(2*(gamma**2)))*wf1r/(a*(wf1l+wf1r))-1)/(sqrt(sum(r1r**2)))&
-		      +((1d0-(sum(r2l*r12))/(2*(gamma**2)))*wf2l/(a*(wf2l+wf2r))-1)/(sqrt(sum(r2l**2)))&
-                      +((1d0-(sum(r2r*r12))/(2*(gamma**2)))*wf2r/(a*(wf2l+wf2r))-1)/(sqrt(sum(r2r**2)))& 
-		      + (1-(2*2*gamma+d12)/(4*(gamma)**4))/d12                                    &
+                       +((1d0+(sum(r1r*r12))/(2*(gamma**2)))*wf1r/(a*(wf1l+wf1r))-1)/(sqrt(sum(r1r**2)))&
+	               +((1d0-(sum(r2l*r12))/(2*(gamma**2)))*wf2l/(a*(wf2l+wf2r))-1)/(sqrt(sum(r2l**2)))&
+                       +((1d0-(sum(r2r*r12))/(2*(gamma**2)))*wf2r/(a*(wf2l+wf2r))-1)/(sqrt(sum(r2r**2)))& 
+	               + (1-(2*2*gamma+d12)/(4*(gamma)**4))/d12                                         &
                       -real(1)/(a**2) 
     return
 end function
